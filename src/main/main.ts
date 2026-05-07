@@ -1,6 +1,7 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
+import { mkdir, writeFile } from 'fs/promises';
 
 let mainWindow: BrowserWindow | null = null;
 let backendProcess: ChildProcess | null = null;
@@ -49,6 +50,70 @@ function createWindow(): void {
     mainWindow = null;
   });
 }
+
+ipcMain.handle('save-csv-file', async (_event, csvContent: string) => {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    title: 'Guardar CSV de productos POS',
+    defaultPath: 'products.csv',
+    filters: [{ name: 'CSV', extensions: ['csv'] }],
+  });
+
+  if (canceled || !filePath) {
+    return { saved: false, reason: 'Guardado cancelado por el usuario.' };
+  }
+
+  await writeFile(filePath, csvContent, 'utf-8');
+  return { saved: true, path: filePath };
+});
+
+ipcMain.handle(
+  'export-import-structure',
+  async (
+    _event,
+    payload: { csvContent: string; images: Array<{ fileName: string; imageUrl: string }> },
+  ) => {
+    const selected = await dialog.showOpenDialog({
+      title: 'Selecciona una carpeta destino',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+
+    if (selected.canceled || selected.filePaths.length === 0) {
+      return { saved: false, reason: 'Exportacion cancelada por el usuario.' };
+    }
+
+    const rootDir = selected.filePaths[0];
+    const importDir = path.join(rootDir, 'import');
+    const imagesDir = path.join(importDir, 'images');
+    const warnings: string[] = [];
+
+    await mkdir(imagesDir, { recursive: true });
+    await writeFile(path.join(importDir, 'products.csv'), payload.csvContent, 'utf-8');
+
+    for (const image of payload.images) {
+      if (!image.fileName || !image.imageUrl) continue;
+
+      if (!/^https?:\/\//i.test(image.imageUrl)) {
+        warnings.push(`No se pudo descargar ${image.fileName}: URL no valida (${image.imageUrl}).`);
+        continue;
+      }
+
+      try {
+        const response = await fetch(image.imageUrl);
+        if (!response.ok) {
+          warnings.push(`No se pudo descargar ${image.fileName}: HTTP ${response.status}.`);
+          continue;
+        }
+        const fileBuffer = Buffer.from(await response.arrayBuffer());
+        await writeFile(path.join(imagesDir, image.fileName), fileBuffer);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'error inesperado';
+        warnings.push(`No se pudo descargar ${image.fileName}: ${errorMessage}.`);
+      }
+    }
+
+    return { saved: true, path: importDir, warnings };
+  },
+);
 
 app.whenReady().then(() => {
   startBackend();
