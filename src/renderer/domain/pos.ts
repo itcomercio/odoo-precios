@@ -15,7 +15,9 @@ export interface PosProduct {
   listPrice: number;
   barcode: string;
   imageFile: string;
-  imageUrl: string;
+  imageSourcePath: string;
+  imagePreviewUrl: string;
+  imageStyle: string;
   sequence: number;
 }
 

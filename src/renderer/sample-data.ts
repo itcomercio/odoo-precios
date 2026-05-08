@@ -1,8 +1,8 @@
 import { PosCategory, PosProduct } from './domain/pos';
 
-const vinoTinto = new URL('../../pos-icons/style-1/vino-tinto-copa.jpg', import.meta.url).href;
-const vinoBlanco = new URL('../../pos-icons/style-1/vino-blanco-copa.jpg', import.meta.url).href;
-const vinoRosado = new URL('../../pos-icons/style-1/vino-rosado-copa.jpg', import.meta.url).href;
+import vinoTinto from '../../pos-icons/style-1/vino-tinto-copa.jpg';
+import vinoBlanco from '../../pos-icons/style-1/vino-blanco-copa.jpg';
+import vinoRosado from '../../pos-icons/style-1/vino-rosado-copa.jpg';
 
 export const initialCategories: PosCategory[] = [
   {
@@ -39,8 +39,10 @@ export const initialProducts: PosProduct[] = [
     name: 'Coca-Cola',
     listPrice: 2.3,
     barcode: '841000000011',
-    imageFile: 'coca-cola.png',
-    imageUrl: 'https://images.unsplash.com/photo-1624552184280-9e9631bbeee9?q=80&w=600&auto=format&fit=crop',
+    imageFile: '',
+    imageSourcePath: '',
+    imagePreviewUrl: '',
+    imageStyle: '',
     sequence: 1,
   },
   {
@@ -50,8 +52,10 @@ export const initialProducts: PosProduct[] = [
     name: 'Agua',
     listPrice: 1.5,
     barcode: '841000000012',
-    imageFile: 'water.png',
-    imageUrl: 'https://images.unsplash.com/photo-1616118132534-381148898bb4?q=80&w=600&auto=format&fit=crop',
+    imageFile: '',
+    imageSourcePath: '',
+    imagePreviewUrl: '',
+    imageStyle: '',
     sequence: 2,
   },
   {
@@ -62,7 +66,9 @@ export const initialProducts: PosProduct[] = [
     listPrice: 3.9,
     barcode: '841000000013',
     imageFile: 'vino-tinto-copa.jpg',
-    imageUrl: vinoTinto,
+    imageSourcePath: 'style-1/vino-tinto-copa.jpg',
+    imagePreviewUrl: vinoTinto,
+    imageStyle: 'style-1',
     sequence: 1,
   },
   {
@@ -73,7 +79,9 @@ export const initialProducts: PosProduct[] = [
     listPrice: 3.9,
     barcode: '841000000014',
     imageFile: 'vino-blanco-copa.jpg',
-    imageUrl: vinoBlanco,
+    imageSourcePath: 'style-1/vino-blanco-copa.jpg',
+    imagePreviewUrl: vinoBlanco,
+    imageStyle: 'style-1',
     sequence: 2,
   },
   {
@@ -84,7 +92,9 @@ export const initialProducts: PosProduct[] = [
     listPrice: 3.9,
     barcode: '841000000015',
     imageFile: 'vino-rosado-copa.jpg',
-    imageUrl: vinoRosado,
+    imageSourcePath: 'style-1/vino-rosado-copa.jpg',
+    imagePreviewUrl: vinoRosado,
+    imageStyle: 'style-1',
     sequence: 3,
   },
   {
@@ -94,8 +104,10 @@ export const initialProducts: PosProduct[] = [
     name: 'Te Verde',
     listPrice: 2.1,
     barcode: '841000000016',
-    imageFile: 'te-verde.png',
-    imageUrl: 'https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?q=80&w=600&auto=format&fit=crop',
+    imageFile: '',
+    imageSourcePath: '',
+    imagePreviewUrl: '',
+    imageStyle: '',
     sequence: 1,
   },
 ];

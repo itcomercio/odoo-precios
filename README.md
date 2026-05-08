@@ -6,11 +6,12 @@ Aplicacion desktop para preparar productos de Odoo POS y exportarlos a CSV.
 
 La interfaz permite:
 - Crear categorias POS (nombre, color y rutas Odoo)
-- Crear productos (codigo, nombre, precio, barcode, imagen)
+- Crear productos (codigo, nombre, precio, barcode)
+- Asignar imagenes desde el panel visual, usando selector por estilos dentro de `pos-icons/`
 - Visualizar botones de producto con imagen, estilo panel Odoo POS
 - Exportar carpeta `import/` con:
   - `import/products.csv`
-  - `import/images/*` (descarga automatica de imagenes cuando la URL es `http/https`)
+  - `import/images/*` (copia automatica de las imagenes seleccionadas desde `pos-icons/`)
 - CSV compatible con:
   - `pos_product_loader/demo/import/products.csv`
   - Estructura: `default_code,name,list_price,category,pos_category,image_file,barcode`
@@ -40,5 +41,5 @@ npm run dev
 - `src/renderer/domain/pos.ts`: modelos tipados y cabeceras CSV
 - `src/renderer/utils/csv.ts`: construccion y serializacion del CSV
 - `src/main/preload.ts`: API segura expuesta al renderer
-- `src/main/main.ts`: guardado del CSV via `ipcMain` + dialogo nativo
+- `src/main/main.ts`: splash, dialogos nativos, lectura de `pos-icons/` y exportacion de `import/`
 
