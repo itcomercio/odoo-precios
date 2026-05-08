@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
 import { mkdir, writeFile } from 'fs/promises';
@@ -31,6 +31,7 @@ function createWindow(): void {
     height: 750,
     minWidth: 800,
     minHeight: 600,
+    autoHideMenuBar: true,
     backgroundColor: '#0f0f1a',
     webPreferences: {
       nodeIntegration: false,
@@ -49,6 +50,8 @@ function createWindow(): void {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  mainWindow.setMenuBarVisibility(false);
 }
 
 ipcMain.handle('save-csv-file', async (_event, csvContent: string) => {
@@ -116,6 +119,7 @@ ipcMain.handle(
 );
 
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
   startBackend();
   // Pequena espera para que Express arranque
   setTimeout(createWindow, 1200);
