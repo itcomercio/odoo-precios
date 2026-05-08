@@ -10,6 +10,12 @@ type SavedState = {
   products: PosProduct[];
   activeCategoryId: string;
 };
+type EditingDraft = {
+  productId: string;
+  name: string;
+  price: string;
+  error: string;
+};
 type PosIconAsset = {
   style: string;
   fileName: string;
@@ -117,6 +123,7 @@ const App = () => {
   const [selectedIconPath, setSelectedIconPath] = useState('');
   const [imagePickerLoading, setImagePickerLoading] = useState(false);
   const [imagePickerError, setImagePickerError] = useState('');
+  const [editingDraft, setEditingDraft] = useState<EditingDraft | null>(null);
 
   const activeCategory = useMemo(
     () => categories.find((category) => category.id === activeCategoryId) ?? null,
@@ -230,6 +237,55 @@ const App = () => {
       setSelectedIconPath('');
       setImagePickerError('');
     }
+    if (editingDraft?.productId === productId) {
+      setEditingDraft(null);
+    }
+  };
+
+  const startEditingProduct = (product: PosProduct) => {
+    setEditingDraft({
+      productId: product.id,
+      name: product.name,
+      price: product.listPrice.toFixed(2),
+      error: '',
+    });
+  };
+
+  const updateEditingDraft = (field: 'name' | 'price', value: string) => {
+    setEditingDraft((previous) => (previous ? { ...previous, [field]: value, error: '' } : previous));
+  };
+
+  const cancelEditingProduct = () => {
+    setEditingDraft(null);
+  };
+
+  const saveEditingProduct = () => {
+    if (!editingDraft) return;
+
+    const normalizedName = editingDraft.name.trim();
+    const normalizedPriceText = editingDraft.price.replace(',', '.').trim();
+    const parsedPrice = Number(normalizedPriceText);
+
+    if (!normalizedName) {
+      setEditingDraft((previous) => (previous ? { ...previous, error: 'El nombre es obligatorio.' } : previous));
+      return;
+    }
+
+    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      setEditingDraft((previous) => (previous ? { ...previous, error: 'Precio no valido.' } : previous));
+      return;
+    }
+
+    setProducts((previous) => previous.map((product) => (
+      product.id === editingDraft.productId
+        ? {
+            ...product,
+            name: normalizedName,
+            listPrice: Number(parsedPrice.toFixed(2)),
+          }
+        : product
+    )));
+    setEditingDraft(null);
   };
 
   const loadAssetsForStyle = async (style: string, preferredPath = '') => {
@@ -475,8 +531,62 @@ const App = () => {
                     )}
                   </div>
                 </button>
-                <div className="product-name">{product.name}</div>
-                <div className="product-meta">{product.listPrice.toFixed(2)} EUR</div>
+
+                {editingDraft?.productId === product.id ? (
+                  <div className="product-editor-inline">
+                    <input
+                      className="product-inline-input product-inline-name"
+                      value={editingDraft.name}
+                      onChange={(event) => updateEditingDraft('name', event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          saveEditingProduct();
+                        }
+                        if (event.key === 'Escape') {
+                          event.preventDefault();
+                          cancelEditingProduct();
+                        }
+                      }}
+                      placeholder="Nombre del producto"
+                      autoFocus
+                    />
+                    <div className="product-inline-price-row">
+                      <input
+                        className="product-inline-input product-inline-price"
+                        value={editingDraft.price}
+                        onChange={(event) => updateEditingDraft('price', event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            saveEditingProduct();
+                          }
+                          if (event.key === 'Escape') {
+                            event.preventDefault();
+                            cancelEditingProduct();
+                          }
+                        }}
+                        placeholder="0.00"
+                        inputMode="decimal"
+                      />
+                      <span className="product-inline-currency">EUR</span>
+                    </div>
+                    <div className="product-inline-actions">
+                      <button type="button" className="product-inline-action secondary" onClick={cancelEditingProduct}>
+                        Cancelar
+                      </button>
+                      <button type="button" className="product-inline-action primary" onClick={saveEditingProduct}>
+                        Guardar
+                      </button>
+                    </div>
+                    {editingDraft.error && <div className="product-inline-error">{editingDraft.error}</div>}
+                  </div>
+                ) : (
+                  <button type="button" className="product-inline-display" onClick={() => startEditingProduct(product)}>
+                    <div className="product-name">{product.name}</div>
+                    <div className="product-meta">{product.listPrice.toFixed(2)} EUR</div>
+                  </button>
+                )}
               </article>
             ))}
           </section>
