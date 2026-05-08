@@ -4,9 +4,12 @@ import { spawn, ChildProcess } from 'child_process';
 import { mkdir, writeFile } from 'fs/promises';
 
 let mainWindow: BrowserWindow | null = null;
+let splashWindow: BrowserWindow | null = null;
 let backendProcess: ChildProcess | null = null;
 const devServerUrl = process.env.VITE_DEV_SERVER_URL;
 const skipInternalBackend = process.env.SKIP_INTERNAL_BACKEND === '1';
+const splashDurationMs = 2200;
+const splashFadeOutMs = 280;
 
 function startBackend(): void {
   if (skipInternalBackend) {
@@ -25,12 +28,46 @@ function startBackend(): void {
   console.log('Backend iniciado en http://localhost:3001');
 }
 
-function createWindow(): void {
+function createSplashWindow(): void {
+  splashWindow = new BrowserWindow({
+    width: 560,
+    height: 320,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    autoHideMenuBar: true,
+    backgroundColor: '#edf2f7',
+    center: true,
+    show: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+
+  splashWindow.setMenuBarVisibility(false);
+
+  if (devServerUrl) {
+    void splashWindow.loadURL(`${devServerUrl}/splash.html`);
+  } else {
+    const splashPath = path.join(__dirname, '..', 'renderer', 'splash.html');
+    void splashWindow.loadFile(splashPath);
+  }
+
+  splashWindow.on('closed', () => {
+    splashWindow = null;
+  });
+}
+
+function createMainWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 750,
     minWidth: 800,
     minHeight: 600,
+    show: false,
     autoHideMenuBar: true,
     backgroundColor: '#0f0f1a',
     webPreferences: {
@@ -41,10 +78,10 @@ function createWindow(): void {
   });
 
   if (devServerUrl) {
-    mainWindow.loadURL(devServerUrl);
+    void mainWindow.loadURL(devServerUrl);
   } else {
-    const htmlPath = path.join(__dirname, '..', '..', 'renderer', 'index.html');
-    mainWindow.loadFile(htmlPath);
+    const htmlPath = path.join(__dirname, '..', 'renderer', 'index.html');
+    void mainWindow.loadFile(htmlPath);
   }
 
   mainWindow.on('closed', () => {
@@ -52,6 +89,54 @@ function createWindow(): void {
   });
 
   mainWindow.setMenuBarVisibility(false);
+}
+
+function waitForMainWindowReady(): Promise<void> {
+  return new Promise((resolve) => {
+    if (!mainWindow) {
+      resolve();
+      return;
+    }
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      resolve();
+    };
+
+    mainWindow.once('ready-to-show', finish);
+    mainWindow.webContents.once('did-fail-load', finish);
+    setTimeout(finish, splashDurationMs + 1200);
+  });
+}
+
+async function bootWithSplash(): Promise<void> {
+  createSplashWindow();
+  createMainWindow();
+
+  await Promise.all([
+    waitForMainWindowReady(),
+    new Promise<void>((resolve) => setTimeout(resolve, splashDurationMs)),
+  ]);
+
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    try {
+      await splashWindow.webContents.executeJavaScript('window.startSplashClose?.();', true);
+    } catch {
+      // Si falla la ejecucion del script, cerramos splash sin animacion.
+    }
+    await new Promise<void>((resolve) => setTimeout(resolve, splashFadeOutMs));
+  }
+
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.close();
+  }
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
 }
 
 ipcMain.handle('save-csv-file', async (_event, csvContent: string) => {
@@ -121,11 +206,15 @@ ipcMain.handle(
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   startBackend();
-  // Pequena espera para que Express arranque
-  setTimeout(createWindow, 1200);
+  void bootWithSplash();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.show();
+      }
+    }
   });
 });
 

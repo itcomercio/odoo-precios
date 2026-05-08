@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comodoo</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(160deg, #f8fafc 0%, #edf2f7 100%);
+        font-family: Inter, Arial, Helvetica, sans-serif;
+        opacity: 0;
+        transition: opacity 280ms ease;
+      }
+
+      body.is-visible {
+        opacity: 1;
+      }
+
+      body.is-closing {
+        opacity: 0;
+      }
+
+      .splash {
+        width: min(78vw, 420px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transform: translateY(8px);
+        transition: transform 300ms ease;
+      }
+
+      body.is-visible .splash {
+        transform: translateY(0);
+      }
+
+      .splash__logo {
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+        filter: drop-shadow(0 8px 24px rgba(15, 23, 42, 0.12));
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        body,
+        .splash {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="splash" aria-label="Pantalla de inicio">
+      <img class="splash__logo" src="/assets/comodoo-logo-2.svg" alt="Comodoo" />
+    </main>
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        requestAnimationFrame(() => {
+          document.body.classList.add('is-visible');
+        });
+      });
+
+      window.startSplashClose = () => {
+        document.body.classList.remove('is-visible');
+        document.body.classList.add('is-closing');
+      };
+    </script>
+  </body>
+</html>
+
+
