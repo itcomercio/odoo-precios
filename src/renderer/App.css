@@ -1,3 +1,9 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -7,6 +13,7 @@ body {
   font-family: Arial, sans-serif;
   background: #dbdbdb;
   color: #2a2a2a;
+  overflow: hidden;
 }
 
 button,
@@ -16,9 +23,10 @@ select {
 }
 
 .app {
-  min-height: 100vh;
+  height: 100%;
   display: grid;
   grid-template-columns: minmax(280px, 20%) 1fr;
+  overflow: hidden;
 }
 
 .config-panel {
@@ -142,6 +150,8 @@ select {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .pos-toolbar {
