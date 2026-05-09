@@ -16,6 +16,11 @@ type EditingDraft = {
   price: string;
   error: string;
 };
+type CategoryEditingDraft = {
+  categoryId: string;
+  name: string;
+  error: string;
+};
 type PosIconAsset = {
   style: string;
   fileName: string;
@@ -124,6 +129,7 @@ const App = () => {
   const [imagePickerLoading, setImagePickerLoading] = useState(false);
   const [imagePickerError, setImagePickerError] = useState('');
   const [editingDraft, setEditingDraft] = useState<EditingDraft | null>(null);
+  const [editingCategoryDraft, setEditingCategoryDraft] = useState<CategoryEditingDraft | null>(null);
 
   const activeCategory = useMemo(
     () => categories.find((category) => category.id === activeCategoryId) ?? null,
@@ -135,6 +141,11 @@ const App = () => {
       .filter((product) => product.categoryId === activeCategoryId)
       .sort((a, b) => a.sequence - b.sequence),
     [products, activeCategoryId],
+  );
+
+  const sortedCategories = useMemo(
+    () => categories.slice().sort((a, b) => a.sequence - b.sequence),
+    [categories],
   );
 
   const imagePickerProduct = useMemo(
@@ -238,6 +249,76 @@ const App = () => {
       setImagePickerError('');
     }
     if (editingDraft?.productId === productId) {
+      setEditingDraft(null);
+    }
+  };
+
+  const startEditingCategory = (category: PosCategory) => {
+    setEditingCategoryDraft({
+      categoryId: category.id,
+      name: category.name,
+      error: '',
+    });
+  };
+
+  const updateEditingCategoryName = (name: string) => {
+    setEditingCategoryDraft((previous) => (previous ? { ...previous, name, error: '' } : previous));
+  };
+
+  const cancelEditingCategory = () => {
+    setEditingCategoryDraft(null);
+  };
+
+  const saveEditingCategory = () => {
+    if (!editingCategoryDraft) return;
+    const normalizedName = editingCategoryDraft.name.trim();
+
+    if (!normalizedName) {
+      setEditingCategoryDraft((previous) => (
+        previous
+          ? { ...previous, error: 'El nombre de la categoria es obligatorio.' }
+          : previous
+      ));
+      return;
+    }
+
+    setCategories((previous) => previous.map((category) => (
+      category.id === editingCategoryDraft.categoryId
+        ? { ...category, name: normalizedName }
+        : category
+    )));
+    setEditingCategoryDraft(null);
+  };
+
+  const deleteCategory = (categoryId: string) => {
+    const removedProductIds = new Set(
+      products.filter((product) => product.categoryId === categoryId).map((product) => product.id),
+    );
+
+    setCategories((previous) => {
+      const remaining = previous.filter((category) => category.id !== categoryId);
+      const resequenced = remaining.map((category, index) => ({
+        ...category,
+        sequence: index + 1,
+      }));
+
+      setActiveCategoryId((previousActive) => {
+        if (previousActive !== categoryId) return previousActive;
+        return resequenced[0]?.id ?? '';
+      });
+
+      return resequenced;
+    });
+
+    setProducts((previous) => previous.filter((product) => product.categoryId !== categoryId));
+
+    if (editingCategoryDraft?.categoryId === categoryId) {
+      setEditingCategoryDraft(null);
+    }
+    if (imagePickerProductId && removedProductIds.has(imagePickerProductId)) {
+      closeImagePicker();
+    }
+    if (editingDraft && removedProductIds.has(editingDraft.productId)) {
       setEditingDraft(null);
     }
   };
@@ -500,19 +581,80 @@ const App = () => {
 
         <main className="pos-panel">
           <div className="pos-toolbar">
-            {categories
-              .slice()
-              .sort((a, b) => a.sequence - b.sequence)
-              .map((category) => (
-                <button
-                  key={category.id}
-                  className={`category-button ${category.id === activeCategoryId ? 'active' : ''}`}
-                  style={{ backgroundColor: category.color }}
-                  onClick={() => setActiveCategoryId(category.id)}
-                >
-                  {category.name}
-                </button>
-              ))}
+            {sortedCategories.map((category) => {
+              const isEditingCategory = editingCategoryDraft?.categoryId === category.id;
+              return (
+                <div key={category.id} className="category-chip" style={{ backgroundColor: category.color }}>
+                  {isEditingCategory ? (
+                    <div className="category-inline-editor">
+                      <input
+                        value={editingCategoryDraft?.name ?? ''}
+                        onChange={(event) => updateEditingCategoryName(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            saveEditingCategory();
+                          }
+                          if (event.key === 'Escape') {
+                            event.preventDefault();
+                            cancelEditingCategory();
+                          }
+                        }}
+                        placeholder="Nombre categoria"
+                        autoFocus
+                      />
+                      <div className="category-inline-actions">
+                        <button type="button" className="category-inline-action secondary" onClick={cancelEditingCategory}>
+                          Cancelar
+                        </button>
+                        <button type="button" className="category-inline-action" onClick={saveEditingCategory}>
+                          Guardar
+                        </button>
+                      </div>
+                      {editingCategoryDraft?.error && (
+                        <p className="category-inline-error">{editingCategoryDraft.error}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        className={`category-button ${category.id === activeCategoryId ? 'active' : ''}`}
+                        onClick={() => setActiveCategoryId(category.id)}
+                        onDoubleClick={() => startEditingCategory(category)}
+                        title="Click para seleccionar, doble click para editar"
+                      >
+                        {category.name}
+                      </button>
+                      <div className="category-button-actions">
+                        <button
+                          type="button"
+                          className="category-action"
+                          title="Editar categoria"
+                          onClick={() => startEditingCategory(category)}
+                        >
+                          E
+                        </button>
+                        <button
+                          type="button"
+                          className="category-action danger"
+                          title="Eliminar categoria y sus productos"
+                          onClick={() => {
+                            const accepted = window.confirm(
+                              `Se eliminara la categoria "${category.name}" y todos sus productos. Continuar?`,
+                            );
+                            if (accepted) {
+                              deleteCategory(category.id);
+                            }
+                          }}
+                        >
+                          X
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <section className="products-grid">
