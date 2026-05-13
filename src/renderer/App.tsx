@@ -43,6 +43,25 @@ const STORAGE_KEY = 'odoo-pos-config-v1';
 
 const createId = () => `id-${Math.random().toString(36).slice(2, 10)}`;
 
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildNextDuplicatedName = (baseName: string, allProducts: PosProduct[]) => {
+  const normalizedBaseName = baseName.trim() || 'Producto';
+  const pattern = new RegExp(`^${escapeRegExp(normalizedBaseName)}(?: (\\d+))?$`);
+  let maxSuffix = 1;
+
+  for (const product of allProducts) {
+    const match = product.name.trim().match(pattern);
+    if (!match) continue;
+    const suffixValue = match[1] ? Number(match[1]) : 1;
+    if (Number.isFinite(suffixValue)) {
+      maxSuffix = Math.max(maxSuffix, suffixValue);
+    }
+  }
+
+  return `${normalizedBaseName} ${maxSuffix + 1}`;
+};
+
 function normalizeCategory(category: Partial<PosCategory>, index: number): PosCategory {
   return {
     id: typeof category.id === 'string' && category.id ? category.id : createId(),
@@ -251,6 +270,23 @@ const App = () => {
     if (editingDraft?.productId === productId) {
       setEditingDraft(null);
     }
+  };
+
+  const duplicateProduct = (productId: string) => {
+    setProducts((previous) => {
+      const sourceProduct = previous.find((product) => product.id === productId);
+      if (!sourceProduct) return previous;
+
+      const nextSequence = previous.filter((product) => product.categoryId === sourceProduct.categoryId).length + 1;
+      const duplicatedProduct: PosProduct = {
+        ...sourceProduct,
+        id: createId(),
+        name: buildNextDuplicatedName(sourceProduct.name, previous),
+        sequence: nextSequence,
+      };
+
+      return [...previous, duplicatedProduct];
+    });
   };
 
   const startEditingCategory = (category: PosCategory) => {
@@ -664,6 +700,14 @@ const App = () => {
             {activeProducts.map((product) => (
               <article key={product.id} className="product-card" style={{ borderBottomColor: activeCategory?.color ?? '#ccc' }}>
                 <button type="button" className="delete-product" onClick={() => deleteProduct(product.id)}>x</button>
+                <button
+                  type="button"
+                  className="duplicate-product"
+                  onClick={() => duplicateProduct(product.id)}
+                  title="Duplicar producto"
+                >
+                  +
+                </button>
                 <button type="button" className="product-image-button" onClick={() => openImagePicker(product.id)}>
                   <div className="product-image-wrap">
                     {product.imagePreviewUrl ? (

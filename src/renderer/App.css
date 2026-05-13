@@ -302,6 +302,21 @@ select {
   z-index: 2;
 }
 
+.duplicate-product {
+  border: none;
+  position: absolute;
+  right: 4px;
+  top: 30px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.82);
+  color: #fff;
+  cursor: pointer;
+  z-index: 2;
+  font-weight: 700;
+}
+
 .product-image-button {
   border: none;
   background: transparent;
