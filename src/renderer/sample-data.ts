@@ -1,8 +1,8 @@
 import { PosCategory, PosProduct } from './domain/pos';
 
-import vinoTinto from '../../pos-icons/style-1/vino-tinto-copa.jpg';
-import vinoBlanco from '../../pos-icons/style-1/vino-blanco-copa.jpg';
-import vinoRosado from '../../pos-icons/style-1/vino-rosado-copa.jpg';
+import vinoTinto from '../../pos-icons/style-1/vino-tinto-copa.png';
+import vinoBlanco from '../../pos-icons/style-1/vino-blanco-copa.png';
+import vinoRosado from '../../pos-icons/style-1/vino-rosado-copa.png';
 
 export const initialCategories: PosCategory[] = [
   {
@@ -65,8 +65,8 @@ export const initialProducts: PosProduct[] = [
     name: 'Vino Tinto',
     listPrice: 3.9,
     barcode: '841000000013',
-    imageFile: 'vino-tinto-copa.jpg',
-    imageSourcePath: 'style-1/vino-tinto-copa.jpg',
+    imageFile: 'vino-tinto-copa.png',
+    imageSourcePath: 'style-1/vino-tinto-copa.png',
     imagePreviewUrl: vinoTinto,
     imageStyle: 'style-1',
     sequence: 1,
@@ -78,8 +78,8 @@ export const initialProducts: PosProduct[] = [
     name: 'Vino Blanco',
     listPrice: 3.9,
     barcode: '841000000014',
-    imageFile: 'vino-blanco-copa.jpg',
-    imageSourcePath: 'style-1/vino-blanco-copa.jpg',
+    imageFile: 'vino-blanco-copa.png',
+    imageSourcePath: 'style-1/vino-blanco-copa.png',
     imagePreviewUrl: vinoBlanco,
     imageStyle: 'style-1',
     sequence: 2,
@@ -91,8 +91,8 @@ export const initialProducts: PosProduct[] = [
     name: 'Vino Rosado',
     listPrice: 3.9,
     barcode: '841000000015',
-    imageFile: 'vino-rosado-copa.jpg',
-    imageSourcePath: 'style-1/vino-rosado-copa.jpg',
+    imageFile: 'vino-rosado-copa.png',
+    imageSourcePath: 'style-1/vino-rosado-copa.png',
     imagePreviewUrl: vinoRosado,
     imageStyle: 'style-1',
     sequence: 3,

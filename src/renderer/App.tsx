@@ -434,25 +434,28 @@ const App = () => {
     setImagePickerError('');
   };
 
-  const applySelectedImage = () => {
-    if (!imagePickerProductId || !selectedIconPath) return;
-
-    const selectedAsset = iconAssets.find((asset) => asset.relativePath === selectedIconPath);
-    if (!selectedAsset) return;
+  const applyImageAsset = (asset: PosIconAsset | null) => {
+    if (!imagePickerProductId || !asset) return;
 
     setProducts((previous) => previous.map((product) => (
       product.id === imagePickerProductId
         ? {
             ...product,
-            imageFile: selectedAsset.fileName,
-            imageSourcePath: selectedAsset.relativePath,
-            imagePreviewUrl: selectedAsset.previewDataUrl,
-            imageStyle: selectedAsset.style,
+            imageFile: asset.fileName,
+            imageSourcePath: asset.relativePath,
+            imagePreviewUrl: asset.previewDataUrl,
+            imageStyle: asset.style,
           }
         : product
     )));
 
     closeImagePicker();
+  };
+
+  const applySelectedImage = () => {
+    if (!selectedIconPath) return;
+    const selectedAsset = iconAssets.find((asset) => asset.relativePath === selectedIconPath) ?? null;
+    applyImageAsset(selectedAsset);
   };
 
   const exportCsv = async () => {
@@ -775,6 +778,8 @@ const App = () => {
                     type="button"
                     className={`icon-option ${selectedIconPath === asset.relativePath ? 'selected' : ''}`}
                     onClick={() => setSelectedIconPath(asset.relativePath)}
+                    onDoubleClick={() => applyImageAsset(asset)}
+                    title="Click para seleccionar, doble click para aplicar"
                   >
                     <div className="icon-option-preview">
                       <img src={asset.previewDataUrl} alt={asset.fileName} />
